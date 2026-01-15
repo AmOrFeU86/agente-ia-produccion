@@ -1,0 +1,10 @@
+services:
+  web:
+    build: .
+    container_name: agente-ia-web
+    ports:
+      - "7860:7860"
+    environment:
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+    command: python web.py
+    restart: unless-stopped
