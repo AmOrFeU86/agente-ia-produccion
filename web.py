@@ -50,7 +50,7 @@ def chat(message, history):
 # Crear la interfaz de Gradio
 demo = gr.ChatInterface(
     fn=chat,
-    title="🤖 Agente de IA con Memoria",
+    title="Agente de IA con Memoria",
     description="Chatea con el asistente IA. Mantiene el contexto de la conversación.",
     examples=[
         "Hola, ¿cómo estás?",
