@@ -51,7 +51,7 @@ def chat(message, history):
 demo = gr.ChatInterface(
     fn=chat,
     title="Agente de IA con Memoria",
-    description="Chatea con el asistente IA. Mantiene el contexto de la conversación.",
+    description="Chatea con el asistente IA. Mantiene el contexto de la conversación. Desplegado automáticamente con GitHub Actions.",
     examples=[
         "Hola, ¿cómo estás?",
         "¿Puedes ayudarme con Python?",
