@@ -112,6 +112,99 @@ sudo certbot --nginx -d chat.tudominio.com
 
 ---
 
+## Paso 9: Configurar GitHub Actions (Despliegue Automático)
+
+### 9.1 Crear usuario para GitHub Actions en el servidor
+
+Ejecuta estos comandos en tu servidor:
+
+```bash
+# 1. Crear usuario github-deploy
+sudo adduser github-deploy --disabled-password --gecos ""
+
+# 2. Agregar al grupo docker
+sudo usermod -aG docker github-deploy
+
+# 3. Crear directorio SSH
+sudo mkdir -p /home/github-deploy/.ssh
+sudo chmod 700 /home/github-deploy/.ssh
+
+# 4. Generar SSH key
+sudo ssh-keygen -t ed25519 -C "github-actions-deploy" -f /home/github-deploy/.ssh/id_ed25519 -N ""
+
+# 5. Añadir clave pública a authorized_keys
+sudo cat /home/github-deploy/.ssh/id_ed25519.pub | sudo tee -a /home/github-deploy/.ssh/authorized_keys
+
+# 6. Permisos correctos
+sudo chmod 600 /home/github-deploy/.ssh/authorized_keys
+sudo chown -R github-deploy:github-deploy /home/github-deploy/.ssh
+
+# 7. Dar permisos del proyecto a github-deploy
+sudo chown -R github-deploy:github-deploy /home/usuario/proyecto
+
+# 8. Mostrar la clave PRIVADA (cópiala completa)
+sudo cat /home/github-deploy/.ssh/id_ed25519
+```
+
+### 9.2 Configurar Secrets en GitHub
+
+Copia la clave privada completa que muestra el último comando (desde `-----BEGIN` hasta `-----END`).
+
+Luego ve a GitHub:
+1. Tu repositorio → **Settings** → **Secrets and variables** → **Actions**
+2. **New repository secret** y crea estos secrets:
+
+| Secret Name | Value |
+|-------------|-------|
+| `SSH_PRIVATE_KEY` | La clave privada completa |
+| `SSH_HOST` | IP o dominio de tu servidor (ej: `162.55.208.55` o `chat.tudominio.com`) |
+| `SSH_USER` | `github-deploy` |
+| `SSH_PORT` | `22` |
+| `PROJECT_PATH` | `/home/usuario/proyecto` |
+
+### 9.3 Crear el archivo de workflow
+
+Crea el archivo `.github/workflows/deploy.yml` en tu repositorio:
+
+```yaml
+name: Deploy to Production
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Deploy to server
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USER }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        port: ${{ secrets.SSH_PORT }}
+        script: |
+          cd ${{ secrets.PROJECT_PATH }}
+          git pull
+          docker-compose down
+          docker-compose up -d --build
+```
+
+### 9.4 Probar el despliegue automático
+
+```bash
+# En tu PC local
+git add .
+git commit -m "Test auto-deploy"
+git push
+```
+
+Ve a GitHub → **Actions** y verás el workflow ejecutándose. ¡Cada `git push` actualizará tu servidor automáticamente! 🚀
+
+---
+
 ## Actualizar código
 
 Cuando hagas cambios en tu código local:
