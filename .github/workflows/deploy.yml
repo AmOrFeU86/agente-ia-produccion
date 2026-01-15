@@ -7,24 +7,14 @@ on:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted  # Usa el runner instalado en tu servidor
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Deploy to server
-      uses: appleboy/ssh-action@v1.0.3
-      with:
-        host: ${{ secrets.SSH_HOST }}
-        username: ${{ secrets.SSH_USER }}
-        key: ${{ secrets.SSH_PRIVATE_KEY }}
-        port: ${{ secrets.SSH_PORT }}
-        timeout: 60s
-        command_timeout: 10m
-        script: |
-          cd ${{ secrets.PROJECT_PATH }}
-          git pull origin main
-          docker-compose down
-          docker-compose up -d --build
-          docker-compose logs --tail=50
+    - name: Deploy application
+      run: |
+        docker-compose down
+        docker-compose up -d --build
+        docker-compose logs --tail=50
